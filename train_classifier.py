@@ -43,13 +43,33 @@ def build_train_set():
                 except:
                     continue
     
-    return p+n
+    cvp=int(len(p)*0.3)
+    cvn=int(len(n)*0.3)
+
+    return ((p[:cvp]+n[:cvn]), (p[cvp:]+n[cvn:]))
 
 if __name__=="__main__":
-    lst = build_train_set()
+    cv_data, train_data = build_train_set()
 
-    training_set = nltk.classify.apply_features(get_features, lst)
+    training_set = nltk.classify.apply_features(get_features, train_data)
     classifier = nltk.NaiveBayesClassifier.train(training_set)
+
+    p=0.0
+    n=0.0
+
+    for t in cv_data:
+        if classifier.classify(get_features(t[0])) == 'positive':
+	    if t[1]=='positive':
+            	p+=1.0
+	    else:
+		n+=1.0
+        elif classifier.classify(get_features(t[0])) == 'negative':
+	    if t[1]=='negative':
+            	p+=1.0
+	    else:
+		n+=1.0
+
+    print "Efficiency using cross-validation: " + str(p/(p+n))
 
     f = open('bayes.pickle', 'wb')
     pickle.dump(classifier, f)
